@@ -1,6 +1,6 @@
 local abc = require "abc"
 
-local it, dict = abc.Model()
+local it, indexer = abc.Model()
 
 it.quacks = it.quacks
 it.flies = it.flies
@@ -11,7 +11,7 @@ for i = 1, 1e6 do
     it.duck[i] = it.quacks * (it.flies + it.swims)
 end
 
-local tick, src = abc.Compile(it, dict)
+local tick, src = abc.Compile(it, indexer())
 
 local start = os.clock()
 

@@ -8,6 +8,9 @@ local Proxy = setmetatable({
     __tostring = function(self)
         return self.__self:tostring()
     end;
+    __call = function(self)
+        return self.__self.index
+    end;
 }, {
     __call = function(Proxy, t)
         return setmetatable({__self = t or {}}, Proxy)
@@ -49,7 +52,7 @@ local Node = setmetatable({
             end
             assert(val_type == "table", ("it is forbidden to assign a %s"):format(val_type))
             node.value = val
-            node.index = self.new_index(node.name)
+            node.index = self.new_index()
         end;
         tostring = function(self)
             local t = {}
@@ -166,22 +169,17 @@ Not.__bor = bor
 Not.__band = band
 Not.__bnot = bnot
 
-local function Model()
-    local dict = {
-        len = 0;
-        map = {}
-    }
-    local function indexer(name)
-        local index = dict.len
-        dict.map[name] = index
-        dict.len = index + 1
+local function Model(indexer)
+    local index = -1
+    indexer = indexer or function()
+        index = index + 1
         return index
     end
     local model = Node("", indexer)
-    return model, dict
+    return model, indexer
 end
 
-local function Compile(model, dict)
+local function Compile(model, len)
     local src = ([[
 local bit = bit or bit32
 local O, A, N
@@ -198,7 +196,7 @@ local function tick()
     return x
 end
 return tick
-]]):format(dict.len, tostring(model))
+]]):format(len, tostring(model))
     local f, err = load(src)
     assert(f, err)
     local tick = f()
