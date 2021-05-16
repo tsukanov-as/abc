@@ -15,14 +15,17 @@ local Proxy = setmetatable({
 })
 
 local function index_tostring(index)
-    return ("%d * M + %d"):format(math.floor(index / 32767), index % 32767)
+    if index < 32767 then
+        return tostring(index)
+    end
+    return ("%d*M+%d"):format(math.floor(index / 32767), index % 32767)
 end
 
 local function operand_tostring(t)
     if getmetatable(t) == Proxy then
         local node = t.__self
         assert(node.value, ("node '%s' is not defined"):format(node.name))
-        return "m["..index_tostring(node.index).."]"
+        return "x["..index_tostring(node.index).."]"
     else
         return tostring(t)
     end
@@ -58,8 +61,7 @@ local Node = setmetatable({
                 assert(self.value, ("node '%s' is not defined"):format(self.name))
             end
             if self.value then
-                t[#t+1] = "-- "..self.name..":"
-                t[#t+1] = "    _m["..index_tostring(self.index).."] = "..operand_tostring(self.value)
+                t[#t+1] = "y["..index_tostring(self.index).."]="..operand_tostring(self.value).." -- "..self.name
             end
             return table.concat(t, "\n")
         end;
@@ -88,25 +90,25 @@ local Node = setmetatable({
 local Or = {
     __tostring = function(self)
         if jit then
-            return "bor("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+            return "O("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
         else
-            return "("..operand_tostring(self.lhs).." | "..operand_tostring(self.rhs)..")"
+            return "("..operand_tostring(self.lhs).."|"..operand_tostring(self.rhs)..")"
         end
     end;
 }
 local And = {
     __tostring = function(self)
         if jit then
-            return "band("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+            return "A("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
         else
-            return "("..operand_tostring(self.lhs).." & "..operand_tostring(self.rhs)..")"
+            return "("..operand_tostring(self.lhs).."&"..operand_tostring(self.rhs)..")"
         end
     end;
 }
 local Not = {
     __tostring = function(self)
         if jit then
-            return "bnot("..operand_tostring(self.rhs)..")"
+            return "N("..operand_tostring(self.rhs)..")"
         else
             return "~("..operand_tostring(self.rhs)..")"
         end
@@ -182,22 +184,19 @@ end
 local function Compile(model, dict)
     local src = ([[
 local bit
-local bor, band, bnot
+local O, A, N
 if jit then
-    bit = require("bit")
-    bor, band, bnot = bit.bor, bit.band, bit.bnot
+bit = require("bit")
+O, A, N = bit.bor, bit.band, bit.bnot
 end
-local m = {}
-local _m = {}
-for i = 0, %d-1 do
-    m[i] = 0
-    _m[i] = 0
-end
+local x = {}
+local y = {}
+for i = 0, %d-1 do x[i] = 0; y[i] = 0 end
 local function tick()
     local M = 32767
 %s
-    m, _m = _m, m
-    return m
+    x, y = y, x
+    return x
 end
 return tick
 ]]):format(dict.len, tostring(model))
