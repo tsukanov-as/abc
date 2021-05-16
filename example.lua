@@ -8,7 +8,7 @@ it.flies = it.flies
 it.swims = it.swims
 it.croaks = it.croaks
 
--- luajit, lua >= 5.3
+-- luajit, lua < 5.3
 it.duck = it.quacks * (it.flies + it.swims)
 it.frog = it.croaks * it.swims * -it.flies
 -- lua >= 5.3

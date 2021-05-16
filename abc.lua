@@ -89,7 +89,7 @@ local Node = setmetatable({
 
 local Or = {
     __tostring = function(self)
-        if jit then
+        if _VERSION < "Lua 5.3" then
             return "O("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
         else
             return "("..operand_tostring(self.lhs).."|"..operand_tostring(self.rhs)..")"
@@ -98,7 +98,7 @@ local Or = {
 }
 local And = {
     __tostring = function(self)
-        if jit then
+        if _VERSION < "Lua 5.3" then
             return "A("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
         else
             return "("..operand_tostring(self.lhs).."&"..operand_tostring(self.rhs)..")"
@@ -107,7 +107,7 @@ local And = {
 }
 local Not = {
     __tostring = function(self)
-        if jit then
+        if _VERSION < "Lua 5.3" then
             return "N("..operand_tostring(self.rhs)..")"
         else
             return "~("..operand_tostring(self.rhs)..")"
@@ -183,10 +183,9 @@ end
 
 local function Compile(model, dict)
     local src = ([[
-local bit
+local bit = bit or bit32
 local O, A, N
-if jit then
-bit = require("bit")
+if _VERSION < "Lua 5.3" then
 O, A, N = bit.bor, bit.band, bit.bnot
 end
 local x = {}
