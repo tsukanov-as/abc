@@ -14,11 +14,15 @@ local Proxy = setmetatable({
     end;
 })
 
+local function index_tostring(index)
+    return ("%d * M + %d"):format(math.floor(index / 32767), index % 32767)
+end
+
 local function operand_tostring(t)
     if getmetatable(t) == Proxy then
         local node = t.__self
         assert(node.value, ("node '%s' is not defined"):format(node.name))
-        return "m["..node.index.."]"
+        return "m["..index_tostring(node.index).."]"
     else
         return tostring(t)
     end
@@ -55,7 +59,7 @@ local Node = setmetatable({
             end
             if self.value then
                 t[#t+1] = "-- "..self.name..":"
-                t[#t+1] = "    _m["..self.index.."] = "..operand_tostring(self.value)
+                t[#t+1] = "    _m["..index_tostring(self.index).."] = "..operand_tostring(self.value)
             end
             return table.concat(t, "\n")
         end;
@@ -152,17 +156,19 @@ local function Compile(model, dict)
 local ffi = require "ffi"
 local bit = require("bit")
 local bor, band, bnot = bit.bor, bit.band, bit.bnot
-local Vector = ffi.typeof("uint8_t[%d]")
+local Vector = ffi.typeof("int32_t[%d]")
 local m = Vector()
 local _m = Vector()
 local function tick()
+    local M = 32767
 %s
     m, _m = _m, m
     return m
 end
 return tick
 ]]):format(dict.len, tostring(model))
-    local f = load(src)
+    local f, err = load(src)
+    assert(f, err)
     local tick = f()
     return tick, src
 end
