@@ -152,15 +152,16 @@ local function Compile(model, dict)
 local ffi = require "ffi"
 local bit = require("bit")
 local bor, band, bnot = bit.bor, bit.band, bit.bnot
-local m = ffi.new("int32_t[?]", %d)
-local _m = ffi.new("int32_t[?]", %d)
+local Vector = ffi.typeof("uint8_t[%d]")
+local m = Vector()
+local _m = Vector()
 local function tick()
 %s
     m, _m = _m, m
     return m
 end
 return tick
-]]):format(dict.len, dict.len, tostring(model))
+]]):format(dict.len, tostring(model))
     local f = load(src)
     local tick = f()
     return tick, src
