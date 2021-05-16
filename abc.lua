@@ -153,12 +153,14 @@ end
 
 local function Compile(model, dict)
     local src = ([[
-local ffi = require "ffi"
 local bit = require("bit")
 local bor, band, bnot = bit.bor, bit.band, bit.bnot
-local Vector = ffi.typeof("int32_t[%d]")
-local m = Vector()
-local _m = Vector()
+local m = {}
+local _m = {}
+for i = 0, %d-1 do
+    m[i] = 0
+    _m[i] = 0
+end
 local function tick()
     local M = 32767
 %s
