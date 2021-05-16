@@ -87,17 +87,29 @@ local Node = setmetatable({
 
 local Or = {
     __tostring = function(self)
-        return "bor("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+        if jit then
+            return "bor("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+        else
+            return "("..operand_tostring(self.lhs).." | "..operand_tostring(self.rhs)..")"
+        end
     end;
 }
 local And = {
     __tostring = function(self)
-        return "band("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+        if jit then
+            return "band("..operand_tostring(self.lhs)..", "..operand_tostring(self.rhs)..")"
+        else
+            return "("..operand_tostring(self.lhs).." & "..operand_tostring(self.rhs)..")"
+        end
     end;
 }
 local Not = {
     __tostring = function(self)
-        return "bnot("..operand_tostring(self.rhs)..")"
+        if jit then
+            return "bnot("..operand_tostring(self.rhs)..")"
+        else
+            return "~("..operand_tostring(self.rhs)..")"
+        end
     end;
 }
 
@@ -124,17 +136,33 @@ Proxy.__add = bor
 Proxy.__mul = band
 Proxy.__unm = bnot
 
+Proxy.__bor = bor
+Proxy.__band = band
+Proxy.__bnot = bnot
+
 Or.__add = bor
 Or.__mul = band
 Or.__unm = bnot
+
+Or.__bor = bor
+Or.__band = band
+Or.__bnot = bnot
 
 And.__add = bor
 And.__mul = band
 And.__unm = bnot
 
+And.__bor = bor
+And.__band = band
+And.__bnot = bnot
+
 Not.__add = bor
 Not.__mul = band
 Not.__unm = bnot
+
+Not.__bor = bor
+Not.__band = band
+Not.__bnot = bnot
 
 local function Model()
     local dict = {
@@ -153,8 +181,12 @@ end
 
 local function Compile(model, dict)
     local src = ([[
-local bit = require("bit")
-local bor, band, bnot = bit.bor, bit.band, bit.bnot
+local bit
+local bor, band, bnot
+if jit then
+    bit = require("bit")
+    bor, band, bnot = bit.bor, bit.band, bit.bnot
+end
 local m = {}
 local _m = {}
 for i = 0, %d-1 do
