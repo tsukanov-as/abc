@@ -18,7 +18,7 @@ local Proxy = setmetatable({
 })
 
 local function index_tostring(index)
-    if index < 32767 then
+    if not jit or index < 32767 then
         return tostring(index)
     end
     return ("%d*M+%d"):format(math.floor(index / 32767), index % 32767)
