@@ -20,7 +20,7 @@ local tick, src = abc.Compile(it, len)
 
 local function print_state(state)
     local t = {}
-    for i = 0, len-1 do
+    for i = 1, len do
         t[#t+1] = tostring(state[i])
     end
     print("["..table.concat(t, ", ").."]")

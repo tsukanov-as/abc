@@ -170,7 +170,7 @@ Not.__band = band
 Not.__bnot = bnot
 
 local function Model(indexer)
-    local index = -1
+    local index = 0
     indexer = indexer or function()
         index = index + 1
         return index
@@ -188,7 +188,7 @@ O, A, N = bit.bor, bit.band, bit.bnot
 end
 local x = {}
 local y = {}
-for i = 0, %d-1 do x[i] = 0; y[i] = 0 end
+for i = 1, %d do x[i] = 0; y[i] = 0 end
 local function tick()
     local M = 32767
 %s
