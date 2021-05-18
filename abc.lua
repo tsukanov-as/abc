@@ -9,7 +9,12 @@ local Proxy = setmetatable({
         return self.__self:tostring()
     end;
     __call = function(self)
-        return self.__self.index
+        local node = self.__self
+        if not node.value then
+            node.value = self
+            node.index = node.new_index()
+        end
+        return node.index
     end;
 }, {
     __call = function(Proxy, t)

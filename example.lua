@@ -3,10 +3,10 @@ local abc = require "abc"
 
 local it, indexer = abc.Model()
 
-it.quacks = it.quacks
-it.flies = it.flies
-it.swims = it.swims
-it.croaks = it.croaks
+local quacks = it.quacks()
+local flies = it.flies()
+local swims = it.swims()
+local croaks = it.croaks()
 
 local function foo(x, y, z)
     return x * (y + z)
@@ -34,8 +34,10 @@ local state = tick()
 
 print_state(state)
 
-state[it.swims()] = 1
-state[it.croaks()] = 1
+state[quacks] = 0
+state[flies] = 0
+state[swims] = 1
+state[croaks] = 1
 
 print_state(state)
 
