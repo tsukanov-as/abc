@@ -8,8 +8,12 @@ it.flies = it.flies
 it.swims = it.swims
 it.croaks = it.croaks
 
+local function foo(x, y, z)
+    return x * (y + z)
+end
+
 -- luajit, lua < 5.3
-it.duck = it.quacks * (it.flies + it.swims)
+it.duck = foo(it.quacks, it.flies, it.swims)
 it.frog = it.croaks * it.swims * -it.flies
 -- lua >= 5.3
 -- it.duck = it.quacks & (it.flies | it.swims)
