@@ -9,8 +9,7 @@ local setColor = love.graphics.setColor
 local brain, tick, state
 
 function love.load()
-    local indexer
-    brain, indexer = abc.Model()
+    brain = abc.Model()
 
     local b = brain
 
@@ -29,8 +28,7 @@ function love.load()
                 - b.x2[(i+1) % 10] * b.x1[0] * b.left
     end
 
-    local len = indexer() - 1
-    tick = abc.Compile(b, len)
+    tick = abc.Compile(b)
     state = tick()
     state[b.left()] = 1
     state[b.right()] = 0

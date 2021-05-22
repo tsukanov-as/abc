@@ -202,11 +202,11 @@ local function Model(indexer)
         index = index + 1
         return index
     end
-    local model = Node("", indexer)
-    return model, indexer
+    return Node("", indexer)
 end
 
-local function Compile(model, len)
+local function Compile(model)
+    local len = model.__self.new_index() - 1
     local src = ([[
 local bit = bit or bit32
 local O, A, N
@@ -227,7 +227,7 @@ return tick
     local f, err = load(src)
     assert(f, err)
     local tick = f()
-    return tick, src
+    return tick, len, src
 end
 
 return {

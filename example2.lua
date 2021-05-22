@@ -1,6 +1,6 @@
 local abc = require "abc"
 
-local m, indexer = abc.Model()
+local m = abc.Model()
 
 m.left = m.left * -m.right
 m.right = m.right * -m.left
@@ -17,8 +17,7 @@ for i = 0, 9 do
             - m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
-local len = indexer() - 1
-local tick, src = abc.Compile(m, len)
+local tick, len, src = abc.Compile(m)
 
 local function print_state(state)
     local t = {}
