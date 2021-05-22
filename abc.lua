@@ -104,6 +104,15 @@ local Or = {
         end
     end;
 }
+local Xor = {
+    __tostring = function(self)
+        if _VERSION < "Lua 5.3" then
+            return "X("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
+        else
+            return "("..operand_tostring(self.lhs).."~"..operand_tostring(self.rhs)..")"
+        end
+    end;
+}
 local And = {
     __tostring = function(self)
         if _VERSION < "Lua 5.3" then
@@ -125,12 +134,17 @@ local Not = {
 
 local function check_operand(operand)
     local mt = getmetatable(operand)
-    assert(mt == Proxy or mt == Or or mt == And or mt == Not, "unknown type")
+    assert(mt == Proxy or mt == Or or mt == And or mt == Not or mt == Xor, "unknown type")
 end
 
 local bor = function(self, other)
     check_operand(other)
     return setmetatable({op = "bor", lhs = self, rhs = other}, Or)
+end
+
+local bxor = function(self, other)
+    check_operand(other)
+    return setmetatable({op = "bxor", lhs = self, rhs = other}, Xor)
 end
 
 local band = function(self, other)
@@ -143,34 +157,42 @@ local bnot = function(self)
 end
 
 Proxy.__add = bor
+Proxy.__sub = bxor
 Proxy.__mul = band
 Proxy.__unm = bnot
 
 Proxy.__bor = bor
+Proxy.__bxor = bxor
 Proxy.__band = band
 Proxy.__bnot = bnot
 
 Or.__add = bor
+Or.__sub = bxor
 Or.__mul = band
 Or.__unm = bnot
 
 Or.__bor = bor
+Or.__bxor = bxor
 Or.__band = band
 Or.__bnot = bnot
 
 And.__add = bor
+And.__sub = bxor
 And.__mul = band
 And.__unm = bnot
 
 And.__bor = bor
+And.__bxor = bxor
 And.__band = band
 And.__bnot = bnot
 
 Not.__add = bor
+Not.__sub = bxor
 Not.__mul = band
 Not.__unm = bnot
 
 Not.__bor = bor
+Not.__bxor = bxor
 Not.__band = band
 Not.__bnot = bnot
 
@@ -189,7 +211,7 @@ local function Compile(model, len)
 local bit = bit or bit32
 local O, A, N
 if _VERSION < "Lua 5.3" then
-O, A, N = bit.bor, bit.band, bit.bnot
+O, X, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
 end
 local x = {}
 local y = {}

@@ -7,14 +7,14 @@ m.right = m.right * -m.left
 
 for i = 0, 9 do
     m.x1[i] = m.x1[(i-1) % 10] * m.right
-            + m.x1[(i+1) % 10] * m.left
+            - m.x1[(i+1) % 10] * m.left
 end
 
 for i = 0, 9 do
     m.x2[i] = m.x2[i] * -( m.x1[9] * m.right
                          + m.x1[0] * m.left )
-            + m.x2[(i-1) % 10] * m.x1[9] * m.right
-            + m.x2[(i+1) % 10] * m.x1[0] * m.left
+            - m.x2[(i-1) % 10] * m.x1[9] * m.right
+            - m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
 local len = indexer() - 1
