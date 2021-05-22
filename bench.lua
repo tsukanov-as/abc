@@ -7,7 +7,7 @@ it.flies = it.flies
 it.swims = it.swims
 it.croaks = it.croaks
 
-for i = 1, 1e6 do
+for i = 1, 1e5 do
     it.duck[i] = it.quacks * (it.flies + it.swims)
 end
 

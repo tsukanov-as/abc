@@ -29,6 +29,6 @@ jobs:
     - name: Run example
       run: lua example2.lua
 
-    - name: Bench 1e6
+    - name: Bench 1e5
       run: lua bench.lua
 
