@@ -2,11 +2,19 @@ local abc = require "abc"
 
 local m, indexer = abc.Model()
 
-local left = m.left()
-local right = m.right()
+m.left = m.left * -m.right
+m.right = m.right * -m.left
 
 for i = 0, 9 do
-    m[i] = m[(i-1) % 10] * m.right + m[(i+1) % 10] * m.left
+    m.x1[i] = m.x1[(i-1) % 10] * m.right
+            + m.x1[(i+1) % 10] * m.left
+end
+
+for i = 0, 9 do
+    m.x2[i] = m.x2[i] * ( -m.x1[0] * m.left
+                        + -m.x1[9] * m.right )
+            + m.x2[(i-1) % 10] * m.x1[9] * m.right
+            + m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
 local len = indexer() - 1
@@ -20,11 +28,15 @@ local function print_state(state)
     print("["..table.concat(t, ", ").."]")
 end
 
+local left = m.left()
+local right = m.right()
+
 local state = tick()
 
 state[left] = 1
 state[right] = 0
-state[m[4]()] = 1
+state[m.x1[4]()] = 1
+state[m.x2[2]()] = 1
 
 print_state(state)
 
