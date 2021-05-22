@@ -11,8 +11,8 @@ for i = 0, 9 do
 end
 
 for i = 0, 9 do
-    m.x2[i] = m.x2[i] * ( -m.x1[0] * m.left
-                        + -m.x1[9] * m.right )
+    m.x2[i] = m.x2[i] * -( m.x1[9] * m.right
+                         + m.x1[0] * m.left )
             + m.x2[(i-1) % 10] * m.x1[9] * m.right
             + m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
@@ -52,3 +52,5 @@ for _ = 1, 10 do
     state = tick()
     print_state(state)
 end
+
+print(m)
