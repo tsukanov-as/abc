@@ -1,4 +1,4 @@
-require("lldebugger").start()
+-- require("lldebugger").start()
 
 package.path = package.path .. ';../?.lua'
 
