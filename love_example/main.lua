@@ -28,7 +28,7 @@ function love.load()
                 - b.x2[(i+1) % 10] * b.x1[0] * b.left
     end
 
-    tick = abc.Compile(b)
+    tick = abc.Build(b)
     state = tick()
     state[b.left()] = 1
     state[b.right()] = 0
