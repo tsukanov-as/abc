@@ -3,10 +3,10 @@ local abc = require "abc"
 
 local it = abc.Model()
 
-local quacks = it.quacks()
-local flies = it.flies()
-local swims = it.swims()
-local croaks = it.croaks()
+local quacks = it.quacks(true)
+local flies = it.flies(true)
+local swims = it.swims(true)
+local croaks = it.croaks(true)
 
 local function foo(x, y, z)
     return x * (y + z)

@@ -8,9 +8,10 @@ local Proxy = setmetatable({
     __tostring = function(self)
         return self.__self:tostring()
     end;
-    __call = function(self)
+    __call = function(self, new)
         local node = self.__self
         if not node.value then
+            assert(new, ("node '%s' is not defined"):format(node.name))
             node.value = self
             node.index = node.new_index()
         end
