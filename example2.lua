@@ -17,11 +17,11 @@ for i = 0, 9 do
             - m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
-local tick, len, src = abc.Compile(m)
+local tick, src = abc.Compile(m)
 
 local function print_state(state)
     local t = {}
-    for i = 1, len do
+    for i = 1, #state do
         t[#t+1] = tostring(state[i])
     end
     print("["..table.concat(t, ", ").."]")

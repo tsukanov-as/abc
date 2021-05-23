@@ -19,11 +19,11 @@ it.frog = it.croaks * it.swims * -it.flies
 -- it.duck = it.quacks & (it.flies | it.swims)
 -- it.frog = it.croaks & it.swims & ~it.flies
 
-local tick, len, src = abc.Compile(it)
+local tick, src = abc.Compile(it)
 
 local function print_state(state)
     local t = {}
-    for i = 1, len do
+    for i = 1, #state do
         t[#t+1] = tostring(state[i])
     end
     print("["..table.concat(t, ", ").."]")

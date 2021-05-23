@@ -227,7 +227,7 @@ return tick
     local f, err = load(src)
     assert(f, err)
     local tick = f()
-    return tick, len, src
+    return tick, src
 end
 
 return {
