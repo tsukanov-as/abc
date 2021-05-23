@@ -17,12 +17,10 @@ for i = 0, 9 do
             - m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
-local tick, src = abc.Build(m)
+local tick, state, src = abc.Build(m)
 
 local left = m.left()
 local right = m.right()
-
-local state = tick()
 
 state[left] = 1
 state[right] = 0

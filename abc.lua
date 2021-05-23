@@ -232,12 +232,12 @@ local function tick()
     x, y = y, x
     return x
 end
-return tick
+return tick, x
 ]]):format(len, tostring(model))
     local f, err = load(src)
     assert(f, err)
-    local tick = f()
-    return tick, src
+    local tick, state = f()
+    return tick, state, src
 end
 
 return {
