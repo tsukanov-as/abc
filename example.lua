@@ -21,27 +21,19 @@ it.frog = it.croaks * it.swims * -it.flies
 
 local tick, src = abc.Build(it)
 
-local function print_state(state)
-    local t = {}
-    for i = 1, #state do
-        t[#t+1] = tostring(state[i])
-    end
-    print("["..table.concat(t, ", ").."]")
-end
-
 local state = tick()
 
-print_state(state)
+print(state)
 
 state[quacks] = 0
 state[flies] = 0
 state[swims] = 1
 state[croaks] = 1
 
-print_state(state)
+print(state)
 
 state = tick()
-print_state(state)
+print(state)
 
 print("is it a duck?", state[it.duck()])
 print("is it a frog?", state[it.frog()])

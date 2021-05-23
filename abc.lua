@@ -214,8 +214,17 @@ local O, A, N
 if _VERSION < "Lua 5.3" then
 O, X, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
 end
-local x = {}
-local y = {}
+local mt = {
+    __tostring = function(self)
+        local t = {}
+        for i = 1, #self do
+            t[#t+1] = tostring(self[i])
+        end
+        return "["..table.concat(t, ", ").."]"
+    end;
+}
+local x = setmetatable({}, mt)
+local y = setmetatable({}, mt)
 for i = 1, %d do x[i] = 0; y[i] = 0 end
 local function tick()
     local M = 32767

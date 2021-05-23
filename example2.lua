@@ -19,14 +19,6 @@ end
 
 local tick, src = abc.Build(m)
 
-local function print_state(state)
-    local t = {}
-    for i = 1, #state do
-        t[#t+1] = tostring(state[i])
-    end
-    print("["..table.concat(t, ", ").."]")
-end
-
 local left = m.left()
 local right = m.right()
 
@@ -37,11 +29,11 @@ state[right] = 0
 state[m.x1[4]()] = 1
 state[m.x2[2]()] = 1
 
-print_state(state)
+print(state)
 
 for _ = 1, 10 do
     state = tick()
-    print_state(state)
+    print(state)
 end
 
 state[left] = 0
@@ -49,7 +41,7 @@ state[right] = 1
 
 for _ = 1, 10 do
     state = tick()
-    print_state(state)
+    print(state)
 end
 
 print(m)
