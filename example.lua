@@ -19,7 +19,7 @@ it.frog = it.croaks * it.swims * -it.flies
 -- it.duck = it.quacks & (it.flies | it.swims)
 -- it.frog = it.croaks & it.swims & ~it.flies
 
-local tick, src = abc.Compile(it)
+local tick, src = abc.Build(it)
 
 local function print_state(state)
     local t = {}

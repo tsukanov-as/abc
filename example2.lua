@@ -17,7 +17,7 @@ for i = 0, 9 do
             - m.x2[(i+1) % 10] * m.x1[0] * m.left
 end
 
-local tick, src = abc.Compile(m)
+local tick, src = abc.Build(m)
 
 local function print_state(state)
     local t = {}

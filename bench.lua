@@ -11,7 +11,7 @@ for i = 1, 1e5 do
     it.duck[i] = it.quacks * (it.flies + it.swims)
 end
 
-local tick = abc.Compile(it)
+local tick = abc.Build(it)
 
 local start = os.clock()
 

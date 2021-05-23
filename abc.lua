@@ -206,7 +206,7 @@ local function Model(indexer)
     return Node("", indexer)
 end
 
-local function Compile(model)
+local function Build(model)
     local len = model.__self.new_index() - 1
     local src = ([[
 local bit = bit or bit32
@@ -233,5 +233,5 @@ end
 
 return {
     Model = Model;
-    Compile = Compile;
+    Build = Build;
 }
