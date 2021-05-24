@@ -108,7 +108,7 @@ local Or = {
 local Xor = {
     __tostring = function(self)
         if _VERSION < "Lua 5.3" then
-            return "X("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
+            return "R("..operand_tostring(self.lhs)..","..operand_tostring(self.rhs)..")"
         else
             return "("..operand_tostring(self.lhs).."~"..operand_tostring(self.rhs)..")"
         end
@@ -216,7 +216,7 @@ local function Build(model)
 local bit = bit or bit32
 local O, A, N
 if _VERSION < "Lua 5.3" then
-O, X, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
+O, R, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
 end
 local mt = {
     __tostring = function(self)
