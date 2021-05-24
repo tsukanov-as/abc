@@ -227,16 +227,17 @@ local mt = {
         return "["..table.concat(t, ", ").."]"
     end;
 }
-local x = setmetatable({}, mt)
-local y = setmetatable({}, mt)
-for i = 1, %d do x[i] = 0; y[i] = 0 end
+local X = setmetatable({}, mt)
+local Y = setmetatable({}, mt)
+for i = 1, %d do X[i] = 0; Y[i] = 0 end
 local function tick()
     local M = 32767
+    local x, y = X, Y
 %s
-    x, y = y, x
-    return x
+    X, Y = y, x
+    return X
 end
-return tick, x
+return tick, X
 ]]):format(len, tostring(model))
     local f, err = load(src)
     assert(f, err)
