@@ -213,11 +213,7 @@ local function Build(model)
     end
     local len = self.index
     local src = ([[
-local bit = bit or bit32
-local O, A, N
-if _VERSION < "Lua 5.3" then
-O, R, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
-end
+local bit = bit or bit32 or {}
 local mt = {
     __tostring = function(self)
         local t = {}
@@ -231,6 +227,7 @@ local X = setmetatable({}, mt)
 local Y = setmetatable({}, mt)
 for i = 1, %d do X[i] = 0; Y[i] = 0 end
 local function tick()
+    local O, R, A, N = bit.bor, bit.bxor, bit.band, bit.bnot
     local M = 32767
     local x, y = X, Y
 %s
