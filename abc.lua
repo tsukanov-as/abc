@@ -207,7 +207,11 @@ local function Model(indexer)
 end
 
 local function Build(model)
-    local len = model.__self.new_index() - 1
+    local self = model.__self
+    if self.index == 0 then
+        self.index = self.new_index() - 1
+    end
+    local len = self.index
     local src = ([[
 local bit = bit or bit32
 local O, A, N
