@@ -20,7 +20,9 @@ local Proxy = setmetatable({
     __call = function(self, new)
         local node = self.__self
         if not node.value then
-            assert(new, ("node '%s' is not defined"):format(node.name))
+            if not new then
+                error(("node '%s' is not defined"):format(node.name))
+            end
             node.value = self
             node.index = node.new_index()
         end
@@ -43,11 +45,10 @@ end
 local function operand_tostring(t)
     if getmetatable(t) == Proxy then
         local node = t.__self
-        assert(node.value, ("node '%s' is not defined"):format(node.name))
-        if jit then
-            return pack_u8(LOAD)..pack_u32(node.index)
+        if not node.value then
+            error(("node '%s' is not defined"):format(node.name))
         end
-        return string.pack("BI4", LOAD, node.index)
+        return pack_u8(LOAD)..pack_u32(node.index)
     else
         return tostring(t)
     end
@@ -61,7 +62,9 @@ local Node = setmetatable({
         set = function(self, key, val)
             local proxy = self.nodes[key]
             local node = proxy.__self
-            assert(not node.value, ("node '%s' is already defined"):format(node.name))
+            if node.value then
+                error(("node '%s' is already defined"):format(node.name))
+            end
             local val_type = type(val)
             if val_type == "table" and getmetatable(val) == nil then
                 for k, v in pairs(val) do
@@ -69,7 +72,9 @@ local Node = setmetatable({
                 end
                 return
             end
-            assert(val_type == "table", ("it is forbidden to assign a %s"):format(val_type))
+            if val_type ~= "table" then
+                error(("it is forbidden to assign a %s"):format(val_type))
+            end
             node.value = val
             node.index = self.new_index()
         end;
@@ -80,7 +85,9 @@ local Node = setmetatable({
                     t[#t+1] = tostring(v)
                 end
             else
-                assert(self.value, ("node '%s' is not defined"):format(self.name))
+                if not self.value then
+                    error(("node '%s' is not defined"):format(self.name))
+                end
             end
             if self.value then
                 t[#t+1] = operand_tostring(self.value)
@@ -91,8 +98,12 @@ local Node = setmetatable({
     };
 }, {
     __call = function(Node, name, indexer)
-        assert(name, "name required")
-        assert(indexer, "indexer required")
+        if not name then
+            error("name required")
+        end
+        if not indexer then
+            error("indexer required")
+        end
         local t = setmetatable({
             name = name;
             index = 0;
@@ -133,7 +144,9 @@ local Not = {
 
 local function check_operand(operand)
     local mt = getmetatable(operand)
-    assert(mt == Proxy or mt == Or or mt == And or mt == Not or mt == Xor, "unknown type")
+    if not (mt == Proxy or mt == Or or mt == And or mt == Not or mt == Xor) then
+        error("unknown type")
+    end
 end
 
 local bor = function(self, other)
