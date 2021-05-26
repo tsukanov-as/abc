@@ -1,4 +1,5 @@
 local ffi = require "ffi"
+local rshift = bit.rshift
 
 local LOAD = 1
 local AND = 2
@@ -7,15 +8,18 @@ local XOR = 4
 local NOT = 5
 local STORE = 6
 
+local emit_node
+
+local function emit_proxy(proxy, b)
+    emit_node(proxy.__self, b)
+end;
+
 local Proxy = setmetatable({
     __index = function(self, key)
         return self.__self:get(key)
     end;
     __newindex = function(self, key, val)
         return self.__self:set(key, val)
-    end;
-    __tostring = function(self)
-        return self.__self:tostring()
     end;
     __call = function(self, new)
         local node = self.__self
@@ -30,29 +34,48 @@ local Proxy = setmetatable({
     end;
 }, {
     __call = function(Proxy, t)
-        return setmetatable({__self = t or {}}, Proxy)
+        return setmetatable({
+            __self = t or {};
+        }, Proxy)
     end;
 })
 
-local function pack_u8(x)
-    return ffi.string(ffi.new("uint8_t[1]", x), 1)
+local function emit_u32(x, b)
+    b[#b+1] = x % 255
+    b[#b+1] = rshift(x, 8) % 255
+    b[#b+1] = rshift(x, 16) % 255
+    b[#b+1] = rshift(x, 24) % 255
 end
 
-local function pack_u32(x)
-    return ffi.string(ffi.new("uint32_t[1]", x), 4)
-end
-
-local function operand_tostring(t)
+local function emit_operand(t, b)
     if getmetatable(t) == Proxy then
         local node = t.__self
         if not node.value then
             error(("node '%s' is not defined"):format(node.name))
         end
-        return pack_u8(LOAD)..pack_u32(node.index)
+        b[#b+1] = LOAD
+        emit_u32(node.index, b)
     else
-        return tostring(t)
+        t:emit(b)
     end
 end
+
+function emit_node(self, b)
+    if next(self.nodes) then
+        for _, n in pairs(self.nodes) do
+            emit_proxy(n, b)
+        end
+    else
+        if not self.value then
+            error(("node '%s' is not defined"):format(self.name))
+        end
+    end
+    if self.value then
+        emit_operand(self.value, b)
+        b[#b+1] = STORE
+        emit_u32(self.index, b)
+    end
+end;
 
 local Node = setmetatable({
     __index = {
@@ -77,23 +100,6 @@ local Node = setmetatable({
             end
             node.value = val
             node.index = self.new_index()
-        end;
-        tostring = function(self)
-            local t = {}
-            if next(self.nodes) then
-                for _, v in pairs(self.nodes) do
-                    t[#t+1] = tostring(v)
-                end
-            else
-                if not self.value then
-                    error(("node '%s' is not defined"):format(self.name))
-                end
-            end
-            if self.value then
-                t[#t+1] = operand_tostring(self.value)
-                t[#t+1] = pack_u8(STORE)..pack_u32(self.index)
-            end
-            return table.concat(t)
         end;
     };
 }, {
@@ -122,24 +128,39 @@ local Node = setmetatable({
 })
 
 local Or = {
-    __tostring = function(self)
-        return operand_tostring(self.lhs)..operand_tostring(self.rhs)..pack_u8(OR)
-    end;
+    __index = {
+        emit = function(self, b)
+            emit_operand(self.lhs, b)
+            emit_operand(self.rhs, b)
+            b[#b+1] = OR
+        end;
+    };
 }
 local Xor = {
-    __tostring = function(self)
-        return operand_tostring(self.lhs)..operand_tostring(self.rhs)..pack_u8(XOR)
-    end;
+    __index = {
+        emit = function(self, b)
+            emit_operand(self.lhs, b)
+            emit_operand(self.rhs, b)
+            b[#b+1] = XOR
+        end;
+    };
 }
 local And = {
-    __tostring = function(self)
-        return operand_tostring(self.lhs)..operand_tostring(self.rhs)..pack_u8(AND)
-    end;
+    __index = {
+        emit = function(self, b)
+            emit_operand(self.lhs, b)
+            emit_operand(self.rhs, b)
+            b[#b+1] = AND
+        end;
+    };
 }
 local Not = {
-    __tostring = function(self)
-        return operand_tostring(self.rhs)..pack_u8(NOT)
-    end;
+    __index = {
+        emit = function(self, b)
+            emit_operand(self.rhs, b)
+            b[#b+1] = NOT
+        end;
+    };
 }
 
 local function check_operand(operand)
@@ -149,44 +170,44 @@ local function check_operand(operand)
     end
 end
 
-local bor = function(self, other)
+local __bor = function(self, other)
     check_operand(other)
     return setmetatable({op = "bor", lhs = self, rhs = other}, Or)
 end
 
-local bxor = function(self, other)
+local __bxor = function(self, other)
     check_operand(other)
     return setmetatable({op = "bxor", lhs = self, rhs = other}, Xor)
 end
 
-local band = function(self, other)
+local __band = function(self, other)
     check_operand(other)
     return setmetatable({op = "band", lhs = self, rhs = other}, And)
 end
 
-local bnot = function(self)
+local __bnot = function(self)
     return setmetatable({op = "bnot", rhs = self}, Not)
 end
 
-Proxy.__add = bor
-Proxy.__sub = bxor
-Proxy.__mul = band
-Proxy.__unm = bnot
+Proxy.__add = __bor
+Proxy.__sub = __bxor
+Proxy.__mul = __band
+Proxy.__unm = __bnot
 
-Or.__add = bor
-Or.__sub = bxor
-Or.__mul = band
-Or.__unm = bnot
+Or.__add = __bor
+Or.__sub = __bxor
+Or.__mul = __band
+Or.__unm = __bnot
 
-And.__add = bor
-And.__sub = bxor
-And.__mul = band
-And.__unm = bnot
+And.__add = __bor
+And.__sub = __bxor
+And.__mul = __band
+And.__unm = __bnot
 
-Not.__add = bor
-Not.__sub = bxor
-Not.__mul = band
-Not.__unm = bnot
+Not.__add = __bor
+Not.__sub = __bxor
+Not.__mul = __band
+Not.__unm = __bnot
 
 local function Model(indexer)
     local index = -1
@@ -203,9 +224,10 @@ local function Build(model, stack_size)
         self.index = self.new_index()
     end
     local len = self.index
-    local src = tostring(model)
+    local b = {}
+    emit_proxy(model, b)
 
-    local prg = ffi.new("uint8_t[?]", #src, src)
+    local prg = ffi.new("uint8_t[?]", #b, b)
     local stack = ffi.new("uint32_t[?]", stack_size or 1000)
     local state = ffi.new("uint32_t[?]", len)
     local _state = ffi.new("uint32_t[?]", len)
