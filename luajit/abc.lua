@@ -77,7 +77,16 @@ function emit_node(self, b)
     end
 end;
 
-local Node = setmetatable({
+local Node
+
+local nodes_index = function(self, key)
+    local mt = getmetatable(self)
+    local node = Node(mt.name.."."..key, mt.new_index)
+    self[key] = node
+    return node
+end
+
+Node = setmetatable({
     __index = {
         get = function(self, key)
             return self.nodes[key]
@@ -115,11 +124,9 @@ local Node = setmetatable({
             index = 0;
             value = false;
             nodes = setmetatable({}, {
-                __index = function(self, key)
-                    local node = Node(name.."."..key, indexer)
-                    self[key] = node
-                    return node
-                end;
+                name = name;
+                new_index = indexer;
+                __index = nodes_index;
             });
             new_index = indexer;
         }, Node)
