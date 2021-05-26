@@ -23,14 +23,14 @@ local Proxy = setmetatable({
     end;
     __call = function(self, new)
         local node = self.__self
-        if not node.value then
+        if not node[2] then
             if not new then
-                error(("node '%s' is not defined"):format(node.name))
+                error(("node '%s' is not defined"):format(node[1]))
             end
-            node.value = self
-            node.index = node.new_index()
+            node[2] = self
+            node[3] = node[4]()
         end
-        return node.index
+        return node[3]
     end;
 }, {
     __call = function(Proxy, t)
@@ -50,30 +50,30 @@ end
 local function emit_operand(t, b)
     if getmetatable(t) == Proxy then
         local node = t.__self
-        if not node.value then
-            error(("node '%s' is not defined"):format(node.name))
+        if not node[2] then
+            error(("node '%s' is not defined"):format(node[1]))
         end
         b[#b+1] = LOAD
-        emit_u32(node.index, b)
+        emit_u32(node[3], b)
     else
         t:emit(b)
     end
 end
 
-function emit_node(self, b)
-    if next(self.nodes) then
-        for _, n in pairs(self.nodes) do
+function emit_node(node, b)
+    if next(node[5]) then
+        for _, n in pairs(node[5]) do
             emit_proxy(n, b)
         end
     else
-        if not self.value then
-            error(("node '%s' is not defined"):format(self.name))
+        if not node[2] then
+            error(("node '%s' is not defined"):format(node[1]))
         end
     end
-    if self.value then
-        emit_operand(self.value, b)
+    if node[2] then
+        emit_operand(node[2], b)
         b[#b+1] = STORE
-        emit_u32(self.index, b)
+        emit_u32(node[3], b)
     end
 end;
 
@@ -89,13 +89,13 @@ end
 Node = setmetatable({
     __index = {
         get = function(self, key)
-            return self.nodes[key]
+            return self[5][key]
         end;
         set = function(self, key, val)
-            local proxy = self.nodes[key]
+            local proxy = self[5][key]
             local node = proxy.__self
-            if node.value then
-                error(("node '%s' is already defined"):format(node.name))
+            if node[2] then
+                error(("node '%s' is already defined"):format(node[1]))
             end
             local val_type = type(val)
             if val_type == "table" and getmetatable(val) == nil then
@@ -107,28 +107,28 @@ Node = setmetatable({
             if val_type ~= "table" then
                 error(("it is forbidden to assign a %s"):format(val_type))
             end
-            node.value = val
-            node.index = self.new_index()
+            node[2] = val
+            node[3] = self[4]()
         end;
     };
 }, {
-    __call = function(Node, name, indexer)
+    __call = function(Node, name, new_index)
         if not name then
             error("name required")
         end
-        if not indexer then
+        if not new_index then
             error("indexer required")
         end
         local t = setmetatable({
-            name = name;
-            index = 0;
-            value = false;
-            nodes = setmetatable({}, {
+            name;  -- name
+            false; -- value
+            0;     -- index
+            new_index; -- new_index
+            setmetatable({}, {
                 name = name;
-                new_index = indexer;
+                new_index = new_index;
                 __index = nodes_index;
-            });
-            new_index = indexer;
+            }); -- nodes
         }, Node)
         return Proxy(t)
     end;
@@ -137,8 +137,8 @@ Node = setmetatable({
 local Or = {
     __index = {
         emit = function(self, b)
-            emit_operand(self.lhs, b)
-            emit_operand(self.rhs, b)
+            emit_operand(self[1], b)
+            emit_operand(self[2], b)
             b[#b+1] = OR
         end;
     };
@@ -146,8 +146,8 @@ local Or = {
 local Xor = {
     __index = {
         emit = function(self, b)
-            emit_operand(self.lhs, b)
-            emit_operand(self.rhs, b)
+            emit_operand(self[1], b)
+            emit_operand(self[2], b)
             b[#b+1] = XOR
         end;
     };
@@ -155,8 +155,8 @@ local Xor = {
 local And = {
     __index = {
         emit = function(self, b)
-            emit_operand(self.lhs, b)
-            emit_operand(self.rhs, b)
+            emit_operand(self[1], b)
+            emit_operand(self[2], b)
             b[#b+1] = AND
         end;
     };
@@ -164,7 +164,7 @@ local And = {
 local Not = {
     __index = {
         emit = function(self, b)
-            emit_operand(self.rhs, b)
+            emit_operand(self[1], b)
             b[#b+1] = NOT
         end;
     };
@@ -179,21 +179,21 @@ end
 
 local __bor = function(self, other)
     check_operand(other)
-    return setmetatable({op = "bor", lhs = self, rhs = other}, Or)
+    return setmetatable({self, other}, Or)
 end
 
 local __bxor = function(self, other)
     check_operand(other)
-    return setmetatable({op = "bxor", lhs = self, rhs = other}, Xor)
+    return setmetatable({self, other}, Xor)
 end
 
 local __band = function(self, other)
     check_operand(other)
-    return setmetatable({op = "band", lhs = self, rhs = other}, And)
+    return setmetatable({self, other}, And)
 end
 
 local __bnot = function(self)
-    return setmetatable({op = "bnot", rhs = self}, Not)
+    return setmetatable({self}, Not)
 end
 
 Proxy.__add = __bor
@@ -227,10 +227,10 @@ end
 
 local function Build(model, stack_size)
     local self = model.__self
-    if self.index == 0 then
-        self.index = self.new_index()
+    if self[3] == 0 then
+        self[3] = self[4]()
     end
-    local len = self.index
+    local len = self[3]
     local b = {}
     emit_proxy(model, b)
 
@@ -239,9 +239,10 @@ local function Build(model, stack_size)
     local state = ffi.new("uint32_t[?]", len)
     local _state = ffi.new("uint32_t[?]", len)
 
+    local band, bor, bxor, bnot  = bit.band, bit.bor, bit.bxor, bit.bnot
+    local lshift = bit.lshift
+
     local function tick()
-        local band, bor, bxor, bnot  = bit.band, bit.bor, bit.bxor, bit.bnot
-        local lshift = bit.lshift
         local s, _s = state, _state
         local ip = -1
         local sp = -1
