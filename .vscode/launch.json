@@ -6,12 +6,30 @@
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "lua": "luajit",
+                "lua": "lua",
                 "file": "${file}"
             }
         },
         {
             "name": "Run",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "lua"
+            },
+            "args": ["${file}"]
+        },
+        {
+            "name": "Debug-JIT",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "lua": "luajit",
+                "file": "${file}"
+            }
+        },
+        {
+            "name": "Run-JIT",
             "type": "lua-local",
             "request": "launch",
             "program": {
