@@ -177,6 +177,16 @@ Or.__bxor = bxor
 Or.__band = band
 Or.__bnot = bnot
 
+Xor.__add = bor
+Xor.__sub = bxor
+Xor.__mul = band
+Xor.__unm = bnot
+
+Xor.__bor = bor
+Xor.__bxor = bxor
+Xor.__band = band
+Xor.__bnot = bnot
+
 And.__add = bor
 And.__sub = bxor
 And.__mul = band

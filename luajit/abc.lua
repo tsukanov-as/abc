@@ -206,6 +206,11 @@ Or.__sub = __bxor
 Or.__mul = __band
 Or.__unm = __bnot
 
+Xor.__add = __bor
+Xor.__sub = __bxor
+Xor.__mul = __band
+Xor.__unm = __bnot
+
 And.__add = __bor
 And.__sub = __bxor
 And.__mul = __band
