@@ -41,10 +41,10 @@ local Proxy = setmetatable({
 })
 
 local function emit_u32(x, b)
-    b[#b+1] = x % 255
-    b[#b+1] = rshift(x, 8) % 255
-    b[#b+1] = rshift(x, 16) % 255
-    b[#b+1] = rshift(x, 24) % 255
+    b[#b+1] = x % 256
+    b[#b+1] = rshift(x, 8) % 256
+    b[#b+1] = rshift(x, 16) % 256
+    b[#b+1] = rshift(x, 24) % 256
 end
 
 local function emit_operand(t, b)
