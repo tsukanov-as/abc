@@ -2,6 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug Python",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "internalConsole"
+        },
+        {
             "name": "Debug",
             "type": "lua-local",
             "request": "launch",
@@ -35,7 +42,9 @@
             "program": {
                 "command": "luajit"
             },
-            "args": ["${file}"]
+            "args": [
+                "${file}"
+            ]
         }
     ]
 }
