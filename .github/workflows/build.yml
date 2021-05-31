@@ -24,11 +24,11 @@ jobs:
         luaVersion: ${{ matrix.luaVersion }}
 
     - name: Run example
-      run: lua example.lua
+      run: lua lua/example.lua
 
     - name: Run example
-      run: lua example2.lua
+      run: lua lua/example2.lua
 
     - name: Bench 1e5
-      run: lua bench.lua
+      run: lua lua/bench.lua
 

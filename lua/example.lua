@@ -1,5 +1,5 @@
 
-local abc = require "abc"
+local abc = require "lua.abc"
 
 local it = abc.Model()
 
