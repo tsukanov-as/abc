@@ -8,6 +8,14 @@ local XOR = 4
 local NOT = 5
 local STORE = 6
 
+
+-- node fields
+local _NAME = 1
+local _VALUE = 2
+local _INDEX = 3
+local _INDEXER = 4
+local _NODES = 5
+
 local emit_node
 
 local function emit_proxy(proxy, b)
@@ -23,14 +31,14 @@ local Proxy = setmetatable({
     end;
     __call = function(self, new)
         local node = self.__self
-        if not node[2] then
+        if not node[_VALUE] then
             if not new then
                 error(("node '%s' is not defined"):format(node[1]))
             end
-            node[2] = self
-            node[3] = node[4]()
+            node[_VALUE] = self
+            node[_INDEX] = node[_INDEXER]()
         end
-        return node[3]
+        return node[_INDEX]
     end;
 }, {
     __call = function(Proxy, t)
@@ -50,30 +58,30 @@ end
 local function emit_operand(t, b)
     if getmetatable(t) == Proxy then
         local node = t.__self
-        if not node[2] then
+        if not node[_VALUE] then
             error(("node '%s' is not defined"):format(node[1]))
         end
         b[#b+1] = LOAD
-        emit_u32(node[3], b)
+        emit_u32(node[_INDEX], b)
     else
         t:emit(b)
     end
 end
 
 function emit_node(node, b)
-    if next(node[5]) then
-        for _, n in pairs(node[5]) do
+    if next(node[_NODES]) then
+        for _, n in pairs(node[_NODES]) do
             emit_proxy(n, b)
         end
     else
-        if not node[2] then
+        if not node[_VALUE] then
             error(("node '%s' is not defined"):format(node[1]))
         end
     end
-    if node[2] then
-        emit_operand(node[2], b)
+    if node[_VALUE] then
+        emit_operand(node[_VALUE], b)
         b[#b+1] = STORE
-        emit_u32(node[3], b)
+        emit_u32(node[_INDEX], b)
     end
 end;
 
@@ -81,7 +89,7 @@ local Node
 
 local nodes_index = function(self, key)
     local mt = getmetatable(self)
-    local node = Node(mt.name.."."..key, mt.new_index)
+    local node = Node(mt.name.."."..key, mt.indexer)
     self[key] = node
     return node
 end
@@ -89,12 +97,12 @@ end
 Node = setmetatable({
     __index = {
         get = function(self, key)
-            return self[5][key]
+            return self[_NODES][key]
         end;
         set = function(self, key, val)
-            local proxy = self[5][key]
+            local proxy = self[_NODES][key]
             local node = proxy.__self
-            if node[2] then
+            if node[_VALUE] then
                 error(("node '%s' is already defined"):format(node[1]))
             end
             local val_type = type(val)
@@ -107,28 +115,28 @@ Node = setmetatable({
             if val_type ~= "table" then
                 error(("it is forbidden to assign a %s"):format(val_type))
             end
-            node[2] = val
-            node[3] = self[4]()
+            node[_VALUE] = val
+            node[_INDEX] = self[_INDEXER]()
         end;
     };
 }, {
-    __call = function(Node, name, new_index)
+    __call = function(Node, name, indexer)
         if not name then
             error("name required")
         end
-        if not new_index then
+        if not indexer then
             error("indexer required")
         end
         local t = setmetatable({
-            name;  -- name
-            false; -- value
-            0;     -- index
-            new_index; -- new_index
+            name;    -- _NAME = 1
+            false;   -- _VALUE = 2
+            0;       -- _INDEX = 3
+            indexer; -- _INDEXER = 4
             setmetatable({}, {
                 name = name;
-                new_index = new_index;
+                indexer = indexer;
                 __index = nodes_index;
-            }); -- nodes
+            });      -- _NODES = 5
         }, Node)
         return Proxy(t)
     end;
@@ -232,10 +240,10 @@ end
 
 local function Build(model, stack_size)
     local self = model.__self
-    if self[3] == 0 then
-        self[3] = self[4]()
+    if self[_INDEX] == 0 then
+        self[_INDEX] = self[_INDEXER]()
     end
-    local len = self[3]
+    local len = self[_INDEX]
     local b = {}
     emit_proxy(model, b)
 

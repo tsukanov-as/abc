@@ -62,6 +62,7 @@ function love.load()
 
     tick, state = abc.Build(b)
     state[b.t[1]()] = 1
+    math.randomseed(os.clock())
     for x = 0, SIZE-1 do
         for y = 0, SIZE-1 do
             state[b[x][y]()] = math.random(0, 1)
