@@ -2,7 +2,7 @@
 
 package.path = package.path .. ';../?.lua'
 
-local abc = require "abc"
+local abc = require "luajit.abc"
 local rectangle = love.graphics.rectangle
 local setColor = love.graphics.setColor
 
