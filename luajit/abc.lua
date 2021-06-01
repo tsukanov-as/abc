@@ -48,11 +48,10 @@ local Proxy = setmetatable({
     end;
 })
 
-local function emit_u32(x, b)
+local function emit_u24(x, b)
     b[#b+1] = x % 256
     b[#b+1] = rshift(x, 8) % 256
     b[#b+1] = rshift(x, 16) % 256
-    b[#b+1] = rshift(x, 24) % 256
 end
 
 local function emit_operand(t, b)
@@ -62,7 +61,7 @@ local function emit_operand(t, b)
             error(("node '%s' is not defined"):format(node[1]))
         end
         b[#b+1] = LOAD
-        emit_u32(node[_INDEX], b)
+        emit_u24(node[_INDEX], b)
     else
         t:emit(b)
     end
@@ -81,7 +80,7 @@ function emit_node(node, b)
     if node[_VALUE] then
         emit_operand(node[_VALUE], b)
         b[#b+1] = STORE
-        emit_u32(node[_INDEX], b)
+        emit_u24(node[_INDEX], b)
     end
 end;
 
@@ -265,8 +264,8 @@ local function Build(model, stack_size)
             ip = ip + 1; b = prg[ip];
             if b == LOAD then
                 sp = sp + 1
-                ip = ip + 4
-                local idx = lshift(prg[ip], 24) + lshift(prg[ip-1], 16) + lshift(prg[ip-2], 8) + prg[ip-3]
+                ip = ip + 3
+                local idx = lshift(prg[ip], 16) + lshift(prg[ip-1], 8) + prg[ip-2]
                 stack[sp] = s[idx]
                 goto start
             elseif b == AND then
@@ -285,8 +284,8 @@ local function Build(model, stack_size)
                 stack[sp] = bnot(stack[sp])
                 goto start
             elseif b == STORE then
-                ip = ip + 4
-                local idx = lshift(prg[ip], 24) + lshift(prg[ip-1], 16) + lshift(prg[ip-2], 8) + prg[ip-3]
+                ip = ip + 3
+                local idx = lshift(prg[ip], 16) + lshift(prg[ip-1], 8) + prg[ip-2]
                 _s[idx] = stack[sp]
                 sp = sp - 1
             end

@@ -1,6 +1,6 @@
 -- require("lldebugger").start()
 
-package.path = package.path .. ';../?.lua'
+package.path = package.path .. ';../?.lua;../../?.lua'
 
 local abc = require "luajit.abc"
 local rectangle = love.graphics.rectangle

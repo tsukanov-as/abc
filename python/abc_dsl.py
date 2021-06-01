@@ -1,3 +1,5 @@
+import numpy as np
+from numba import jit, uint64
 
 LOAD = 1
 AND = 2
@@ -28,7 +30,7 @@ class Base:
 def emit_operand(operand, code):
     if isinstance(operand, Model):
         code.append(LOAD)
-        code.extend(operand().to_bytes(4, byteorder='little'))
+        code.extend(operand().to_bytes(3, byteorder='little'))
     else:
         operand.emit(code)
 
@@ -132,51 +134,49 @@ class Model(Base):
                 raise Exception(f"node '{self.__name}' is not defined")
         emit_operand(self.__value, code)
         code.append(STORE)
-        code.extend(self().to_bytes(4, byteorder='little'))
+        code.extend(self().to_bytes(3, byteorder='little'))
 
 def Compile(model):
     size = model._Model__indexer(True)
     code = bytearray()
-    code.extend(size.to_bytes(4, byteorder='little'))
+    code.extend(size.to_bytes(3, byteorder='little'))
     model._Model__emit(code)
     return code
 
 def Build(model):
     code = Compile(model)
-    size = (code[3] << 24) + (code[2] << 16) + (code[1] << 8) + code[0]
-    import numpy as np
-    from numba import jit, uint64
+    size = (code[2] << 16) + (code[1] << 8) + code[0]
     prg = np.array(code, np.uint8)
     stack = np.zeros(1000, np.uint64)
     state = np.zeros(size, np.uint64)
     _state = np.zeros(size, np.uint64)
-    @jit((uint64[:], uint64[:], uint64[:]), nopython=True, nogil=True)
+    @jit(nopython=True, nogil=True)
     def tickjit(state, _state, stack):
         i = 0
-        ip = 0
+        ip = 2
         sp = -1
         while i < size:
             ip += 1
             b = prg[ip]
             if b == LOAD:
                 sp += 1
-                ip += 4
-                idx = (prg[ip] << 24) + (prg[ip-1] << 16) + (prg[ip-2] << 8) + prg[ip-3]
+                ip += 3
+                idx = (prg[ip] << 16) + (prg[ip-1] << 8) + prg[ip-2]
                 stack[sp] = state[idx]
             elif b == AND:
                 sp -= 1
-                stack[sp] = stack[sp] & stack[sp+1]
+                stack[sp] &= stack[sp+1]
             elif b == OR:
                 sp -= 1
-                stack[sp] = stack[sp] | stack[sp+1]
+                stack[sp] |= stack[sp+1]
             elif b == XOR:
                 sp -= 1
-                stack[sp] = stack[sp] ^ stack[sp+1]
+                stack[sp] ^= stack[sp+1]
             elif b == NOT:
                 stack[sp] = ~stack[sp]
             elif b == STORE:
-                ip += 4
-                idx = (prg[ip] << 24) + (prg[ip-1] << 16) + (prg[ip-2] << 8) + prg[ip-3]
+                ip += 3
+                idx = (prg[ip] << 16) + (prg[ip-1] << 8) + prg[ip-2]
                 _state[idx] = stack[sp]
                 sp -= 1
                 i += 1
@@ -186,4 +186,4 @@ def Build(model):
         tickjit(state, _state, stack)
         state, _state = _state, state
         return state
-    return tick
+    return tick, state
