@@ -10,7 +10,7 @@ croaks = m.croaks(True)
 m.duck = m.quacks & (m.flies | m.swims)
 m.frog = m.croaks & m.swims & ~m.flies
 
-tick = abc.Build(m)
+tick, state = abc.Build(m)
 
 state = tick()
 
