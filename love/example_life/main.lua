@@ -33,7 +33,7 @@ function love.load()
     local function Or(t)
         assert(#t > 0)
         local r = t[1]
-        for i = 2, 8 do
+        for i = 2, #t do
             r = r + t[i]
         end
         return r
@@ -42,7 +42,7 @@ function love.load()
     for x = 0, SIZE-1 do
         for y = 0, SIZE-1 do
             local f = {}
-            for i = 1, 8 do
+            for i = 1, #p do
                 local dx = p[i][1]
                 local dy = p[i][2]
                 f[i] = b[(x+dx)%SIZE][(y+dy)%SIZE] * b.t[i]
