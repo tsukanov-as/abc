@@ -86,20 +86,18 @@ end;
 
 local Node
 
-local nodes_index = function(self, key)
-    local mt = getmetatable(self)
-    local node = Node(mt.name.."."..key, mt.indexer)
-    self[key] = node
-    return node
-end
-
 Node = setmetatable({
     __index = {
         get = function(self, key)
-            return self[_NODES][key]
+            local proxy = self[_NODES][key]
+            if proxy == nil then
+                proxy = Node(self[_NAME].."."..key, self[_INDEXER])
+                self[_NODES][key] = proxy
+            end
+            return proxy
         end;
         set = function(self, key, val)
-            local proxy = self[_NODES][key]
+            local proxy = self:get(key)
             local node = proxy.__self
             if node[_VALUE] then
                 error(("node '%s' is already defined"):format(node[1]))
@@ -131,11 +129,7 @@ Node = setmetatable({
             false;   -- _VALUE = 2
             0;       -- _INDEX = 3
             indexer; -- _INDEXER = 4
-            setmetatable({}, {
-                name = name;
-                indexer = indexer;
-                __index = nodes_index;
-            });      -- _NODES = 5
+            {};      -- _NODES = 5
         }, Node)
         return Proxy(t)
     end;
